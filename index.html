@@ -4,28 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Jason - GolfSim Pro</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <style>
-        :root { --primary: #00d4ff; --bg: #111; --card: #222; }
-        body { font-family: sans-serif; padding: 15px; background: var(--bg); color: #eee; margin: 0; overflow-x: hidden; }
-        .card { background: var(--card); padding: 15px; border-radius: 16px; border: 1px solid #333; margin-bottom: 10px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        label { display: block; font-size: 10px; color: var(--primary); text-transform: uppercase; margin-bottom: 4px; }
-        input { width: 100%; background: #000; border: 2px solid #444; color: #fff; padding: 12px; border-radius: 10px; box-sizing: border-box; font-size: 18px; text-align: center; }
-        #trajectoryCanvas { width: 100%; height: 220px; background: #000; border-radius: 12px; margin: 10px 0; border: 1px solid #444; }
+        :root { --primary: #00d4ff; --bg: #111; --card: #222; --danger: #ff4444; --success: #00ff00; }
+        body { font-family: -apple-system, system-ui, sans-serif; padding: 15px; background: var(--bg); color: #eee; margin: 0; padding-bottom: 80px; }
+        
+        #splash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 10000; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; transition: opacity 0.8s ease;
+        }
+        #splash img { width: 140px; height: 140px; border-radius: 20px; margin-bottom: 20px; }
+
+        h1 { color: var(--primary); font-size: 22px; text-align: center; margin: 15px 0; font-weight: 700; }
+        .card { background: var(--card); padding: 15px; border-radius: 16px; margin-bottom: 12px; border: 1px solid #333; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        label { display: block; font-size: 10px; color: var(--primary); text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.5px; }
+        input { width: 100%; background: #000; border: 2px solid #444; color: #fff; padding: 12px; border-radius: 10px; box-sizing: border-box; font-size: 18px; outline: none; text-align: center; }
+        
+        .smash-pro { border-color: var(--success) !important; color: var(--success); }
+        .smash-warn { border-color: #e040fb !important; color: #e040fb; }
+
+        #trajectoryCanvas { width: 100%; height: 200px; background: #000; border-radius: 12px; margin: 12px 0; border: 1px solid #444; }
         .result-box { background: linear-gradient(135deg, var(--primary), #008fb3); color: #000; padding: 15px; border-radius: 12px; text-align: center; }
-        .result-val { font-size: 32px; font-weight: 900; display: block; }
-        .sticky-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); color: #000; text-align: center; padding: 10px 0; font-weight: bold; font-size: 12px; border-top: 1px solid #fff; }
+        .result-val { font-size: 28px; font-weight: 900; display: block; line-height: 1; margin-top: 5px; }
+        
+        .btn { background: #fff; color: #000; border: none; padding: 14px; width: 100%; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+        
+        .admin-section { border: 2px dashed #333; padding: 15px; border-radius: 12px; margin-top: 10px; opacity: 0.5; transition: 0.3s; }
+        .admin-section.unlocked { opacity: 1; border-color: var(--primary); background: #1a1a1a; }
+        #lockBtn { background: none; border: none; color: #666; font-size: 20px; cursor: pointer; float: right; }
+
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; font-size: 11px; color: #ccc; }
+        th { background: #333; color: var(--primary); padding: 10px; border-bottom: 2px solid var(--primary); }
+        td { border: 1px solid #333; padding: 8px; text-align: center; }
+        
+        .sticky-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); color: #000; text-align: center; padding: 12px 0; font-weight: 900; font-size: 12px; }
     </style>
 </head>
 <body>
 
-    <h1 style="color:var(--primary); text-align:center; font-size:22px; margin-top:10px;">🏌️ JASON GOLFSIM PRO</h1>
+    <div id="splash">
+        <img src="icon-png.png" alt="GolfSim Pro Logo">
+        <h2 style="color:white; font-weight:300; letter-spacing:2px;">GOLFSIM PRO</h2>
+    </div>
+
+    <h1>🏌️ JASON GOLFSIM PRO</h1>
 
     <div class="card">
         <div class="grid">
-            <div><label>Club Speed (mph)</label><input type="number" id="clubSpeed" value="100" step="1" oninput="runPhysics()"></div>
-            <div><label>Attack Angle (°)</label><input type="number" id="attackAngle" value="3.6" step="0.1" oninput="runPhysics()"></div>
-            <div><label>Launch Angle (°)</label><input type="number" id="launchAngle" value="12.0" step="0.1" oninput="runPhysics()"></div>
+            <div><label>Club Speed (mph)</label><input type="number" id="clubSpeed" value="100" oninput="runPhysics()"></div>
+            <div><label>Attack Angle (°)</label><input type="number" id="attackAngle" value="3.6" oninput="runPhysics()"></div>
+            <div><label>Launch Angle (°)</label><input type="number" id="launchAngle" value="12.0" oninput="runPhysics()"></div>
             <div><label>Smash Factor</label><input type="number" id="smashFactor" value="1.45" step="0.01" oninput="runPhysics()"></div>
         </div>
 
@@ -33,124 +67,124 @@
 
         <div class="result-box">
             <div class="grid">
-                <div><small>CARRY DISTANCE</small><span class="result-val" id="resDist">0 yds</span></div>
-                <div><small>MAX HEIGHT</small><span class="result-val" id="resHeight">0 ft</span></div>
+                <div><small>CARRY DISTANCE</small><span class="result-val" id="resDist">--</span></div>
+                <div><small>MAX HEIGHT</small><span class="result-val" id="resHeight">--</span></div>
             </div>
         </div>
     </div>
 
-    <footer class="sticky-footer"> © JMM • 2026 </footer>
+    <div class="admin-section" id="adminArea">
+        <button id="lockBtn" onclick="unlockAdmin()">🔒</button>
+        <label>Admin: Import Trackman CSV</label>
+        <input type="file" id="fileInput" disabled style="margin-top:10px; font-size: 12px; border: none; background: transparent;">
+    </div>
+
+    <div style="overflow-x: auto; margin-bottom: 40px;"> 
+        <table id="dataTable"></table>
+    </div>
+
+    <footer class="sticky-footer"> &copy; JMM &bull; 2026 </footer>
 
 <script>
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            document.getElementById('splash').style.opacity = '0';
+            setTimeout(() => document.getElementById('splash').remove(), 800);
+        }, 1500);
+        runPhysics();
+    });
+
+    function unlockAdmin() {
+        const pin = prompt("Enter Admin PIN:");
+        if (pin === "1234") {
+            document.getElementById('adminArea').classList.add('unlocked');
+            document.getElementById('fileInput').disabled = false;
+            document.getElementById('lockBtn').textContent = "🔓";
+        } else { alert("Access Denied."); }
+    }
+
     function runPhysics() {
         const clubSpeed = parseFloat(document.getElementById('clubSpeed').value) || 0;
-        const smash = parseFloat(document.getElementById('smashFactor').value) || 0;
+        const smashInput = document.getElementById('smashFactor');
+        const smash = parseFloat(smashInput.value) || 0;
         const launch = parseFloat(document.getElementById('launchAngle').value) || 0;
 
-        // 1. Initial Ball Speed in Yards per Second
-        // Ball Speed (mph) = Club Speed * Smash
-        // 1 mph = 0.4888 yards/sec
+        // Visual Quality Feedback
+        smashInput.classList.remove('smash-pro', 'smash-warn');
+        if (smash >= 1.45 && smash <= 1.50) smashInput.classList.add('smash-pro');
+        if (smash > 1.50) smashInput.classList.add('smash-warn');
+
+        // Physics Logic (Yards/Sec)
         const ballSpeedYps = (clubSpeed * smash) * 0.488889;
         const angleRad = launch * (Math.PI / 180);
-
-        // 2. Initial Velocities
         let vx = ballSpeedYps * Math.cos(angleRad);
         let vy = ballSpeedYps * Math.sin(angleRad);
 
-        // 3. Constants (Simplified Aerodynamics for Stability)
-        const g = 10.72;      // Gravity in yards/s^2
-        const drag = 0.0014;  // Air resistance coefficient
-        const lift = 0.0008;  // Magnus effect lift coefficient
+        const g = 10.72;      // Gravity (yds/s2)
+        const drag = 0.0016;  // Adjusted for realism
+        const lift = 0.0007;  // Magnus lift
+        
+        let x = 0, y = 0.5, dt = 0.01, points = [], maxHeight = 0;
 
-        let x = 0, y = 0.5; // Start at 0.5 yards height
-        let dt = 0.01;      // Small time step for accuracy
-        let points = [];
-        let maxHeight = 0;
-
-        // 4. Flight Simulation Loop
-        for (let t = 0; t < 1000; t++) {
+        for (let t = 0; t < 1500; t++) {
             let v = Math.sqrt(vx * vx + vy * vy);
-            
-            // Apply Accelerations
+            if (v < 0.1) break;
+
             let ax = -(drag * v * vx);
             let ay = -g - (drag * v * vy) + (lift * v * vx);
 
-            // Update Velocity
-            vx += ax * dt;
-            vy += ay * dt;
-
-            // Update Position
-            x += vx * dt;
-            y += vy * dt;
-
+            vx += ax * dt; vy += ay * dt; x += vx * dt; y += vy * dt;
             if (y > maxHeight) maxHeight = y;
             points.push({x: x, y: y});
-
-            // Stop if ball hits ground
             if (y <= 0) break;
         }
 
-        // 5. Update UI
         document.getElementById('resDist').textContent = Math.round(x) + " yds";
         document.getElementById('resHeight').textContent = Math.round(maxHeight * 3) + " ft";
-
         drawPlot(points, x, maxHeight);
     }
 
     function drawPlot(pts, totalX, totalY) {
         const canvas = document.getElementById('trajectoryCanvas');
         const ctx = canvas.getContext('2d');
-        
-        // Handle High-DPI Mobile Screens
-        canvas.width = canvas.offsetWidth * 2;
-        canvas.height = canvas.offsetHeight * 2;
+        canvas.width = canvas.offsetWidth * 2; canvas.height = canvas.offsetHeight * 2;
         ctx.scale(2, 2);
+        const w = canvas.offsetWidth, h = canvas.offsetHeight, pad = 30;
 
-        const w = canvas.offsetWidth;
-        const h = canvas.offsetHeight;
-        const pad = 30;
+        ctx.fillStyle = "#000"; ctx.fillRect(0, 0, w, h);
+        const scaleX = (w - pad * 2) / Math.max(totalX, 280);
+        const scaleY = (h - pad * 2) / Math.max(totalY, 40);
 
-        ctx.fillStyle = "#000";
-        ctx.fillRect(0, 0, w, h);
+        ctx.strokeStyle = "#444"; ctx.beginPath();
+        ctx.moveTo(pad, h - pad); ctx.lineTo(w - pad, h - pad); ctx.stroke();
 
-        // X and Y scaling (Ensures 250yd drives look right on screen)
-        const scaleX = (w - pad * 2) / Math.max(totalX, 260);
-        const scaleY = (h - pad * 2) / Math.max(totalY, 45);
-
-        // Draw Ground Line
-        ctx.strokeStyle = "#444";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
+        ctx.strokeStyle = "#00d4ff"; ctx.lineWidth = 4; ctx.beginPath();
         ctx.moveTo(pad, h - pad);
-        ctx.lineTo(w - pad, h - pad);
+        pts.forEach(p => ctx.lineTo(pad + (p.x * scaleX), (h - pad) - (p.y * scaleY)));
         ctx.stroke();
 
-        // Draw Trajectory
-        ctx.strokeStyle = "#00d4ff";
-        ctx.lineWidth = 4;
-        ctx.lineJoin = "round";
-        ctx.beginPath();
-        ctx.moveTo(pad, h - pad);
-
-        pts.forEach(p => {
-            const drawX = pad + (p.x * scaleX);
-            const drawY = (h - pad) - (p.y * scaleY);
-            ctx.lineTo(drawX, drawY);
-        });
-        ctx.stroke();
-
-        // Impact Point
-        ctx.fillStyle = "#fff";
-        ctx.beginPath();
-        ctx.arc(pad + (totalX * scaleX), h - pad, 5, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.beginPath();
+        ctx.arc(pad + (totalX * scaleX), h - pad, 4, 0, Math.PI * 2); ctx.fill();
     }
 
-    // Initial Launch
-    window.onload = runPhysics;
+    document.getElementById('fileInput').addEventListener('change', function(e){
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader(); reader.onload = function(event){
+            const rows = event.target.result.split('\n').map(r => r.split(',')).filter(r => r.length > 1);
+            renderTable(rows);
+        }; reader.readAsText(file);
+    });
+
+    function renderTable(rows){
+        const table = document.getElementById('dataTable'); let html = "<thead><tr>";
+        rows[0].forEach(h => html += `<th>${h.trim()}</th>`); html += "</tr></thead><tbody>";
+        rows.slice(1).forEach(row => { html += "<tr>"; row.forEach(v => html += `<td>${v.trim()}</td>`); html += "</tr>"; });
+        table.innerHTML = html + "</tbody>";
+    }
 </script>
 </body>
 </html>
+
 
 
 
