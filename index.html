@@ -28,6 +28,7 @@
             margin-top: 15px;
         }
 
+        /* The invisible functional input */
         input[type="file"] {
             position: absolute;
             left: 0;
@@ -36,8 +37,10 @@
             width: 100%;
             height: 100%;
             cursor: pointer;
+            z-index: 10;
         }
 
+        /* The visible "Fake" button */
         .custom-file-btn {
             display: block;
             background: #222;
@@ -114,7 +117,7 @@
     
     <div class="file-upload-wrapper">
         <div class="custom-file-btn" id="fileBtnText">📁 Tap to Select CSV</div>
-        <input type="file" id="fileInput" accept=".csv, text/csv, text/plain, application/vnd.ms-excel">
+        <input type="file" id="fileInput">
     </div>
 
     <select id="clubFilter">
@@ -135,6 +138,7 @@
 let allData = [];
 let clubKey = null;
 
+// PWA Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
@@ -224,6 +228,7 @@ function renderTable(data){
 
 </body>
 </html>
+
 
 
 
