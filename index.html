@@ -6,27 +6,26 @@
     <title>Jason - GolfSim Pro</title>
     <style>
         :root { --primary: #00d4ff; --bg: #111; --card: #222; }
-        body { font-family: sans-serif; padding: 15px; background: var(--bg); color: #eee; margin: 0; }
+        body { font-family: sans-serif; padding: 15px; background: var(--bg); color: #eee; margin: 0; overflow-x: hidden; }
         .card { background: var(--card); padding: 15px; border-radius: 16px; border: 1px solid #333; margin-bottom: 10px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         label { display: block; font-size: 10px; color: var(--primary); text-transform: uppercase; margin-bottom: 4px; }
-        input { width: 100%; background: #000; border: 2px solid #444; color: #fff; padding: 12px; border-radius: 10px; box-sizing: border-box; font-size: 18px; }
-        #trajectoryCanvas { width: 100%; height: 200px; background: #000; border-radius: 12px; margin: 10px 0; border: 1px solid #333; }
+        input { width: 100%; background: #000; border: 2px solid #444; color: #fff; padding: 12px; border-radius: 10px; box-sizing: border-box; font-size: 18px; text-align: center; }
+        #trajectoryCanvas { width: 100%; height: 220px; background: #000; border-radius: 12px; margin: 10px 0; border: 1px solid #444; }
         .result-box { background: linear-gradient(135deg, var(--primary), #008fb3); color: #000; padding: 15px; border-radius: 12px; text-align: center; }
-        .result-val { font-size: 28px; font-weight: 800; display: block; }
-        .sticky-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); color: #000; text-align: center; padding: 10px 0; font-weight: bold; font-size: 12px; }
-        .smash-pro { border-color: #00ff00 !important; color: #00ff00; }
+        .result-val { font-size: 32px; font-weight: 900; display: block; }
+        .sticky-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); color: #000; text-align: center; padding: 10px 0; font-weight: bold; font-size: 12px; border-top: 1px solid #fff; }
     </style>
 </head>
 <body>
 
-    <h1 style="color:var(--primary); text-align:center; font-size:20px;">🏌️ JASON GOLFSIM PRO</h1>
+    <h1 style="color:var(--primary); text-align:center; font-size:22px; margin-top:10px;">🏌️ JASON GOLFSIM PRO</h1>
 
     <div class="card">
         <div class="grid">
-            <div><label>Club Speed (mph)</label><input type="number" id="clubSpeed" value="100" oninput="runPhysics()"></div>
-            <div><label>Attack Angle (°)</label><input type="number" id="attackAngle" value="3.6" oninput="runPhysics()"></div>
-            <div><label>Launch Angle (°)</label><input type="number" id="launchAngle" value="12.0" oninput="runPhysics()"></div>
+            <div><label>Club Speed (mph)</label><input type="number" id="clubSpeed" value="100" step="1" oninput="runPhysics()"></div>
+            <div><label>Attack Angle (°)</label><input type="number" id="attackAngle" value="3.6" step="0.1" oninput="runPhysics()"></div>
+            <div><label>Launch Angle (°)</label><input type="number" id="launchAngle" value="12.0" step="0.1" oninput="runPhysics()"></div>
             <div><label>Smash Factor</label><input type="number" id="smashFactor" value="1.45" step="0.01" oninput="runPhysics()"></div>
         </div>
 
@@ -34,8 +33,8 @@
 
         <div class="result-box">
             <div class="grid">
-                <div><small>CARRY DISTANCE</small><span class="result-val" id="resDist">--</span></div>
-                <div><small>MAX HEIGHT</small><span class="result-val" id="resHeight">--</span></div>
+                <div><small>CARRY DISTANCE</small><span class="result-val" id="resDist">0 yds</span></div>
+                <div><small>MAX HEIGHT</small><span class="result-val" id="resHeight">0 ft</span></div>
             </div>
         </div>
     </div>
@@ -47,93 +46,112 @@
         const clubSpeed = parseFloat(document.getElementById('clubSpeed').value) || 0;
         const smash = parseFloat(document.getElementById('smashFactor').value) || 0;
         const launch = parseFloat(document.getElementById('launchAngle').value) || 0;
-        
-        // Quality Color for Smash
-        const smashInput = document.getElementById('smashFactor');
-        smashInput.className = (smash >= 1.45 && smash <= 1.50) ? 'smash-pro' : '';
 
-        // Initial Ball Velocity in Yards Per Second
-        // 1 MPH = 0.488889 Yards/Sec
+        // 1. Initial Ball Speed in Yards per Second
+        // Ball Speed (mph) = Club Speed * Smash
+        // 1 mph = 0.4888 yards/sec
         const ballSpeedYps = (clubSpeed * smash) * 0.488889;
         const angleRad = launch * (Math.PI / 180);
 
+        // 2. Initial Velocities
         let vx = ballSpeedYps * Math.cos(angleRad);
         let vy = ballSpeedYps * Math.sin(angleRad);
-        
-        // Physics constants (tuned for yards/seconds)
-        const gravity = 10.72; // Yards/s^2 (Standard 9.8m/s converted)
-        const dragK = 0.0012;  // Simplified air resistance factor
-        const liftK = 0.0006;  // Simplified Magnus lift factor
 
-        let x = 0;
-        let y = 0.1; // Start slightly above ground
-        let dt = 0.02; // Time step
+        // 3. Constants (Simplified Aerodynamics for Stability)
+        const g = 10.72;      // Gravity in yards/s^2
+        const drag = 0.0014;  // Air resistance coefficient
+        const lift = 0.0008;  // Magnus effect lift coefficient
+
+        let x = 0, y = 0.5; // Start at 0.5 yards height
+        let dt = 0.01;      // Small time step for accuracy
         let points = [];
         let maxHeight = 0;
 
-        // Loop until ball hits ground (y=0)
-        for (let i = 0; i < 500; i++) {
-            let v = Math.sqrt(vx*vx + vy*vy);
-            if (v < 1) break;
+        // 4. Flight Simulation Loop
+        for (let t = 0; t < 1000; t++) {
+            let v = Math.sqrt(vx * vx + vy * vy);
+            
+            // Apply Accelerations
+            let ax = -(drag * v * vx);
+            let ay = -g - (drag * v * vy) + (lift * v * vx);
 
-            // Simple Physics: Velocity - Gravity - Air Resistance + Lift
-            let ax = -(dragK * v * vx); 
-            let ay = -gravity - (dragK * v * vy) + (liftK * v * vx);
-
+            // Update Velocity
             vx += ax * dt;
             vy += ay * dt;
+
+            // Update Position
             x += vx * dt;
             y += vy * dt;
 
             if (y > maxHeight) maxHeight = y;
             points.push({x: x, y: y});
 
+            // Stop if ball hits ground
             if (y <= 0) break;
         }
 
+        // 5. Update UI
         document.getElementById('resDist').textContent = Math.round(x) + " yds";
         document.getElementById('resHeight').textContent = Math.round(maxHeight * 3) + " ft";
 
-        drawTrajectory(points, x, maxHeight);
+        drawPlot(points, x, maxHeight);
     }
 
-    function drawTrajectory(pts, d, h) {
-        const c = document.getElementById('trajectoryCanvas');
-        const ctx = c.getContext('2d');
-        c.width = c.offsetWidth * 2; c.height = c.offsetHeight * 2;
-        ctx.scale(2, 2);
+    function drawPlot(pts, totalX, totalY) {
+        const canvas = document.getElementById('trajectoryCanvas');
+        const ctx = canvas.getContext('2d');
         
-        const w = c.offsetWidth, ht = c.offsetHeight, pad = 20;
-        ctx.clearRect(0, 0, w, ht);
+        // Handle High-DPI Mobile Screens
+        canvas.width = canvas.offsetWidth * 2;
+        canvas.height = canvas.offsetHeight * 2;
+        ctx.scale(2, 2);
 
-        // Ground line
-        ctx.strokeStyle = '#333'; ctx.beginPath();
-        ctx.moveTo(pad, ht - pad); ctx.lineTo(w - pad, ht - pad); ctx.stroke();
+        const w = canvas.offsetWidth;
+        const h = canvas.offsetHeight;
+        const pad = 30;
 
-        // Scale trajectory to fit screen
-        const scaleX = (w - pad * 2) / Math.max(d, 250);
-        const scaleY = (ht - pad * 2) / Math.max(h, 40);
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, w, h);
 
-        ctx.strokeStyle = '#00d4ff';
-        ctx.lineWidth = 3;
+        // X and Y scaling (Ensures 250yd drives look right on screen)
+        const scaleX = (w - pad * 2) / Math.max(totalX, 260);
+        const scaleY = (h - pad * 2) / Math.max(totalY, 45);
+
+        // Draw Ground Line
+        ctx.strokeStyle = "#444";
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(pad, ht - pad);
+        ctx.moveTo(pad, h - pad);
+        ctx.lineTo(w - pad, h - pad);
+        ctx.stroke();
+
+        // Draw Trajectory
+        ctx.strokeStyle = "#00d4ff";
+        ctx.lineWidth = 4;
+        ctx.lineJoin = "round";
+        ctx.beginPath();
+        ctx.moveTo(pad, h - pad);
 
         pts.forEach(p => {
-            ctx.lineTo(pad + p.x * scaleX, (ht - pad) - p.y * scaleY);
+            const drawX = pad + (p.x * scaleX);
+            const drawY = (h - pad) - (p.y * scaleY);
+            ctx.lineTo(drawX, drawY);
         });
         ctx.stroke();
 
-        // Landing Spot
-        ctx.fillStyle = '#fff'; ctx.beginPath();
-        ctx.arc(pad + d * scaleX, ht - pad, 4, 0, Math.PI * 2); ctx.fill();
+        // Impact Point
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(pad + (totalX * scaleX), h - pad, 5, 0, Math.PI * 2);
+        ctx.fill();
     }
 
-    // Run immediately on load
+    // Initial Launch
     window.onload = runPhysics;
 </script>
 </body>
 </html>
+
 
 
 
