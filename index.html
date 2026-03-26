@@ -14,16 +14,46 @@
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
             padding: 20px; 
-            padding-bottom: 100px; /* Crucial: Prevents footer from covering last row of data */
+            padding-bottom: 120px; 
             background: #111; 
             color: #eee; 
             font-size: 18px;
         }
         
-        h1 { color: #00d4ff; font-size: 28px; margin-bottom: 10px; }
-        h3 { font-size: 20px; color: #aaa; margin-top: 25px; }
+        h1 { color: #00d4ff; font-size: 28px; margin-bottom: 10px; text-align: center; }
+        h3 { font-size: 20px; color: #aaa; margin-top: 25px; text-align: center; }
 
-        input[type="file"], select { 
+        /* Custom File Upload Styling to prevent truncation */
+        .file-upload-wrapper {
+            position: relative;
+            margin-top: 15px;
+        }
+
+        /* Hide the default input but keep it functional */
+        input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        /* The "Fake" button that looks better */
+        .custom-file-btn {
+            display: block;
+            background: #222;
+            color: #00d4ff;
+            border: 2px dashed #444;
+            padding: 20px;
+            text-align: center;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        select { 
             background: #222;
             color: #eee;
             border: 1px solid #444;
@@ -32,14 +62,15 @@
             font-size: 18px;
             border-radius: 8px;
             box-sizing: border-box;
-            margin-top: 10px;
+            margin-top: 15px;
+            appearance: none; /* Modern look for mobile */
         }
 
         table { 
             border-collapse: collapse; 
             width: 100%; 
             margin-top: 25px; 
-            font-size: 14px; 
+            font-size: 13px; 
         }
         
         td, th { border: 1px solid #333; padding: 12px 8px; text-align: center; }
@@ -49,22 +80,23 @@
         #debug { 
             margin-top: 20px; 
             color: #0f0; 
-            font-size: 13px; 
+            font-size: 14px; 
+            text-align: center;
             white-space: pre-wrap; 
             background: #000; 
-            padding: 10px; 
-            border-radius: 5px;
+            padding: 15px; 
+            border-radius: 8px;
             border: 1px solid #222;
+            min-height: 20px;
         }
 
-        /* HIGH VISIBILITY STICKY FOOTER */
         .sticky-footer {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            background: #00d4ff; /* Your theme blue */
-            color: #000;         /* Contrast black text */
+            background: #00d4ff;
+            color: #000;
             text-align: center;
             padding: 15px 0;
             font-size: 14px;
@@ -72,7 +104,7 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             border-top: 2px solid #fff;
-            z-index: 9999;       /* Ensures it floats above everything */
+            z-index: 9999;
         }
     </style>
 </head>
@@ -81,11 +113,15 @@
 
     <h1>🏌️ Jason - GolfSim App</h1>
 
-    <h3>Upload Trackman CSV</h3>
-    <input type="file" id="fileInput">
+    <h3>Trackman Data</h3>
+    
+    <div class="file-upload-wrapper">
+        <div class="custom-file-btn" id="fileBtnText">📁 Tap to Select CSV</div>
+        <input type="file" id="fileInput" accept=".csv">
+    </div>
 
     <select id="clubFilter">
-        <option value="all">All Clubs</option>
+        <option value="all">Filter by Club: All</option>
     </select>
 
     <div id="debug">System Ready.</div>
@@ -102,7 +138,6 @@
 let allData = [];
 let clubKey = null;
 
-// PWA Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
@@ -111,10 +146,17 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// FILE UPLOAD
-document.getElementById('fileInput').addEventListener('change', function(e){
+// FILE UPLOAD - with text update logic
+const fileInput = document.getElementById('fileInput');
+const fileBtnText = document.getElementById('fileBtnText');
+
+fileInput.addEventListener('change', function(e){
     const file = e.target.files[0];
     if(!file) return;
+
+    // Update the button text to show the filename clearly
+    fileBtnText.textContent = "✅ " + file.name;
+    fileBtnText.style.borderColor = "#00d4ff";
 
     const reader = new FileReader();
     reader.onload = function(event){
@@ -123,7 +165,6 @@ document.getElementById('fileInput').addEventListener('change', function(e){
     reader.readAsText(file);
 });
 
-// PARSE CSV
 function parseCSV(text){
     const rows = text.split('\n')
         .filter(r => r.trim() !== '')
@@ -132,7 +173,7 @@ function parseCSV(text){
     if (rows.length === 0) return;
 
     const headers = rows[0].map(h => h.trim());
-    document.getElementById('debug').textContent = "Detected Headers:\n" + headers.join(', ');
+    document.getElementById('debug').textContent = "Loaded: " + headers.length + " columns detected.";
 
     clubKey = headers.find(h => h.toLowerCase().includes("club"));
 
@@ -146,10 +187,9 @@ function parseCSV(text){
     renderTable(allData);
 }
 
-// POPULATE FILTER
 function populateClubFilter(){
     const select = document.getElementById('clubFilter');
-    select.innerHTML = '<option value="all">All Clubs</option>';
+    select.innerHTML = '<option value="all">Filter by Club: All</option>';
     if(!clubKey) return;
 
     const clubs = [...new Set(allData.map(d => d[clubKey]))].filter(Boolean);
@@ -161,13 +201,11 @@ function populateClubFilter(){
     });
 }
 
-// FILTER CHANGE
 document.getElementById('clubFilter').addEventListener('change', function(){
     const val = this.value;
     renderTable(val === "all" || !clubKey ? allData : allData.filter(d => d[clubKey] === val));
 });
 
-// RENDER TABLE
 function renderTable(data){
     const table = document.getElementById('dataTable');
     if(data.length === 0){
@@ -191,4 +229,5 @@ function renderTable(data){
 
 </body>
 </html>
+
 
