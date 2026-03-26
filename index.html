@@ -6,7 +6,7 @@
     <title>Jason - GolfSim App</title>
     
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://via.placeholder.com/192">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -14,7 +14,7 @@
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
             padding: 20px; 
-            padding-bottom: 80px; /* Extra space so the table doesn't get hidden behind the footer */
+            padding-bottom: 100px; /* Crucial: Prevents footer from covering last row of data */
             background: #111; 
             color: #eee; 
             font-size: 18px;
@@ -57,21 +57,22 @@
             border: 1px solid #222;
         }
 
-        /* Sticky Footer Styles */
+        /* HIGH VISIBILITY STICKY FOOTER */
         .sticky-footer {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            background: #1a1a1a; /* Dark gray to match theme */
-            color: #888;
+            background: #00d4ff; /* Your theme blue */
+            color: #000;         /* Contrast black text */
             text-align: center;
             padding: 15px 0;
-            font-size: 10px;
+            font-size: 14px;
+            font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 2px;
-            border-top: 1px solid #333;
-            z-index: 100; /* Keeps it on top of the table */
+            border-top: 2px solid #fff;
+            z-index: 9999;       /* Ensures it floats above everything */
         }
     </style>
 </head>
@@ -101,6 +102,7 @@
 let allData = [];
 let clubKey = null;
 
+// PWA Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
@@ -109,6 +111,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// FILE UPLOAD
 document.getElementById('fileInput').addEventListener('change', function(e){
     const file = e.target.files[0];
     if(!file) return;
@@ -120,6 +123,7 @@ document.getElementById('fileInput').addEventListener('change', function(e){
     reader.readAsText(file);
 });
 
+// PARSE CSV
 function parseCSV(text){
     const rows = text.split('\n')
         .filter(r => r.trim() !== '')
@@ -142,6 +146,7 @@ function parseCSV(text){
     renderTable(allData);
 }
 
+// POPULATE FILTER
 function populateClubFilter(){
     const select = document.getElementById('clubFilter');
     select.innerHTML = '<option value="all">All Clubs</option>';
@@ -156,11 +161,13 @@ function populateClubFilter(){
     });
 }
 
+// FILTER CHANGE
 document.getElementById('clubFilter').addEventListener('change', function(){
     const val = this.value;
     renderTable(val === "all" || !clubKey ? allData : allData.filter(d => d[clubKey] === val));
 });
 
+// RENDER TABLE
 function renderTable(data){
     const table = document.getElementById('dataTable');
     if(data.length === 0){
