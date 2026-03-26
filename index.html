@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Jafur Trackman Analyzer</title>
+<title>Jason - GolfSim App</title>
 
 <style>
 body { font-family: Arial; padding: 20px; background:#111; color:#eee; }
@@ -16,16 +16,12 @@ input, select, button, textarea { margin-top:10px; padding:8px; width:100%; }
 
 <body>
 
-<h1>🏌️ Trackman Data Analyzer</h1>
+<h1>🏌️ Jason - GolfSim App</h1>
 
-<h3>Option 1: Upload CSV</h3>
+<h3>Upload Trackman CSV</h3>
 <input type="file" id="fileInput">
 
-<h3>Option 2: Paste CSV (recommended on iPhone)</h3>
-<textarea id="csvInput" rows="8" placeholder="Paste CSV data here..."></textarea>
-<button onclick="loadCSV()">Load Data</button>
-
-<select id="clubFilter">
+<select id="clubFilter" style="margin-top: 20px;">
 <option value="all">All Clubs</option>
 </select>
 
@@ -52,21 +48,13 @@ document.getElementById('fileInput').addEventListener('change', function(e){
     reader.readAsText(file);
 });
 
-// PASTE CSV
-function loadCSV(){
-    const text = document.getElementById('csvInput').value;
-    if(!text.trim()){
-        alert("Paste CSV first");
-        return;
-    }
-    parseCSV(text);
-}
-
 // PARSE CSV
 function parseCSV(text){
     const rows = text.split('\n')
         .filter(r => r.trim() !== '')
         .map(r => r.split(','));
+
+    if (rows.length === 0) return;
 
     const headers = rows[0].map(h => h.trim());
 
@@ -140,3 +128,4 @@ function renderTable(data){
 
 </body>
 </html>
+
