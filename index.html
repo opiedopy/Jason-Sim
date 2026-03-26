@@ -1,39 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png"> 
-<meta charset="UTF-8">
-<title>Jason - GolfSim App</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jason - GolfSim App</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<style>
-body { font-family: Arial; padding: 20px; background:#111; color:#eee; }
-h1 { color:#00d4ff; }
-table { border-collapse: collapse; width: 100%; margin-top:20px;}
-td, th { border:1px solid #444; padding:8px; text-align:center;}
-input, select, button, textarea { margin-top:10px; padding:8px; width:100%; }
-#debug { margin-top:15px; color:#0f0; font-size:12px; white-space:pre-wrap;}
-</style>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
+            padding: 20px; 
+            background: #111; 
+            color: #eee; 
+            font-size: 18px; /* Larger base font for mobile readability */
+        }
+        
+        h1 { color: #00d4ff; font-size: 28px; margin-bottom: 10px; }
+        h3 { font-size: 20px; color: #aaa; margin-top: 25px; }
+
+        /* Beefing up inputs for touch-friendly use */
+        input[type="file"], select { 
+            background: #222;
+            color: #eee;
+            border: 1px solid #444;
+            padding: 15px; 
+            width: 100%; 
+            font-size: 18px;
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-top: 10px;
+        }
+
+        table { 
+            border-collapse: collapse; 
+            width: 100%; 
+            margin-top: 25px; 
+            font-size: 14px; /* Table text stays slightly smaller to fit columns */
+        }
+        
+        td, th { border: 1px solid #333; padding: 12px 8px; text-align: center; }
+        th { background: #222; color: #00d4ff; }
+        tr:nth-child(even) { background: #181818; }
+
+        #debug { 
+            margin-top: 20px; 
+            color: #0f0; 
+            font-size: 13px; 
+            white-space: pre-wrap; 
+            background: #000; 
+            padding: 10px; 
+            border-radius: 5px;
+            border: 1px solid #222;
+        }
+    </style>
 </head>
 
 <body>
 
-<h1>🏌️ Jason - GolfSim App</h1>
+    <h1>🏌️ Jason - GolfSim App</h1>
 
-<h3>Upload Trackman CSV</h3>
-<input type="file" id="fileInput">
+    <h3>Upload Trackman CSV</h3>
+    <input type="file" id="fileInput">
 
-<select id="clubFilter" style="margin-top: 20px;">
-<option value="all">All Clubs</option>
-</select>
+    <select id="clubFilter">
+        <option value="all">All Clubs</option>
+    </select>
 
-<div id="debug"></div>
+    <div id="debug">System Ready.</div>
 
-<table id="dataTable"></table>
+    <div style="overflow-x: auto;"> <table id="dataTable"></table>
+    </div>
 
 <script>
 let allData = [];
 let clubKey = null;
+
+// PWA Service Worker Registration
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('Service Worker Registered'))
+            .catch(err => console.log('Service Worker Failed', err));
+    });
+}
 
 // FILE UPLOAD
 document.getElementById('fileInput').addEventListener('change', function(e){
@@ -41,12 +94,9 @@ document.getElementById('fileInput').addEventListener('change', function(e){
     if(!file) return;
 
     const reader = new FileReader();
-
     reader.onload = function(event){
-        const text = event.target.result;
-        parseCSV(text);
+        parseCSV(event.target.result);
     };
-
     reader.readAsText(file);
 });
 
@@ -59,11 +109,8 @@ function parseCSV(text){
     if (rows.length === 0) return;
 
     const headers = rows[0].map(h => h.trim());
+    document.getElementById('debug').textContent = "Detected Headers:\n" + headers.join(', ');
 
-    document.getElementById('debug').textContent =
-        "Detected Headers:\n" + headers.join('\n');
-
-    // Find club column automatically
     clubKey = headers.find(h => h.toLowerCase().includes("club"));
 
     allData = rows.slice(1).map(row => {
@@ -80,13 +127,10 @@ function parseCSV(text){
 function populateClubFilter(){
     const select = document.getElementById('clubFilter');
     select.innerHTML = '<option value="all">All Clubs</option>';
-
     if(!clubKey) return;
 
-    const clubs = [...new Set(allData.map(d => d[clubKey]))];
-
+    const clubs = [...new Set(allData.map(d => d[clubKey]))].filter(Boolean);
     clubs.forEach(c => {
-        if(!c) return;
         let opt = document.createElement('option');
         opt.value = c;
         opt.textContent = c;
@@ -97,37 +141,28 @@ function populateClubFilter(){
 // FILTER CHANGE
 document.getElementById('clubFilter').addEventListener('change', function(){
     const val = this.value;
-
-    if(val === "all" || !clubKey){
-        renderTable(allData);
-    } else {
-        renderTable(allData.filter(d => d[clubKey] === val));
-    }
+    renderTable(val === "all" || !clubKey ? allData : allData.filter(d => d[clubKey] === val));
 });
 
 // RENDER TABLE
 function renderTable(data){
     const table = document.getElementById('dataTable');
-
     if(data.length === 0){
-        table.innerHTML = "<tr><td>No data</td></tr>";
+        table.innerHTML = "<tr><td>No data available</td></tr>";
         return;
     }
 
-    let html = "<tr>";
+    let html = "<thead><tr>";
     Object.keys(data[0]).forEach(h => html += `<th>${h}</th>`);
-    html += "</tr>";
+    html += "</tr></thead><tbody>";
 
     data.forEach(row=>{
         html += "<tr>";
         Object.values(row).forEach(v => html += `<td>${v || ''}</td>`);
         html += "</tr>";
     });
-
+    html += "</tbody>";
     table.innerHTML = html;
-}
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
 }
 </script>
 
