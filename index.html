@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Jason Trackman Analyzer</title>
+<style>
+body { font-family: Arial; padding: 20px; background:#111; color:#eee; }
+h1 { color:#00d4ff; }
+table { border-collapse: collapse; width: 100%; margin-top:20px;}
+td, th { border:1px solid #444; padding:8px; text-align:center;}
+input { margin-top:10px; }
+</style>
+</head>
+<body>
+
+<h1>🏌️ Jason Sim Data Analyzer</h1>
+
+<input type="file" id="fileInput" accept=".csv">
+
+<select id="clubFilter">
+<option value="all">All Clubs</option>
+</select>
+
+<table id="dataTable"></table>
+
+<script>
+let allData = [];
+
+document.getElementById('fileInput').addEventListener('change', function(e){
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(event){
+        const text = event.target.result;
+        parseCSV(text);
+    };
+    reader.readAsText(file);
+});
+
+function parseCSV(text){
+    const rows = text.split('\n').map(r => r.split(','));
+    const headers = rows[0];
+    allData = rows.slice(1).map(row => {
+        let obj = {};
+        headers.forEach((h,i)=> obj[h.trim()] = row[i]);
+        return obj;
+    });
+
+    populateClubFilter();
+    renderTable(allData);
+}
+
+function populateClubFilter(){
+    const clubs = [...new Set(allData.map(d => d.Club))];
+    const select = document.getElementById('clubFilter');
+
+    clubs.forEach(c => {
+        let opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        select.appendChild(opt);
+    });
+}
+
+document.getElementById('clubFilter').addEventListener('change', function(){
+    const val = this.value;
+    if(val === "all"){
+        renderTable(allData);
+    } else {
+        renderTable(allData.filter(d => d.Club === val));
+    }
+});
+
+function renderTable(data){
+    const table = document.getElementById('dataTable');
+    if(data.length === 0) return;
+
+    let html = "<tr>";
+    Object.keys(data[0]).forEach(h => html += `<th>${h}</th>`);
+    html += "</tr>";
+
+    data.forEach(row=>{
+        html += "<tr>";
+        Object.values(row).forEach(v => html += `<td>${v}</td>`);
+        html += "</tr>";
+    });
+
+    table.innerHTML = html;
+}
+</script>
+
+</body>
+</html>
