@@ -2,47 +2,83 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Jason Trackman Analyzer</title>
+<title>Jafur Trackman Analyzer</title>
+
 <style>
 body { font-family: Arial; padding: 20px; background:#111; color:#eee; }
 h1 { color:#00d4ff; }
 table { border-collapse: collapse; width: 100%; margin-top:20px;}
 td, th { border:1px solid #444; padding:8px; text-align:center;}
-input { margin-top:10px; }
+input, select, button, textarea { margin-top:10px; padding:8px; width:100%; }
+#debug { margin-top:15px; color:#0f0; font-size:12px; white-space:pre-wrap;}
 </style>
 </head>
+
 <body>
 
-<h1>🏌️ Jason Sim Data Analyzer</h1>
+<h1>🏌️ Trackman Data Analyzer</h1>
 
-<input type="file" id="fileInput" accept=".csv">
+<h3>Option 1: Upload CSV</h3>
+<input type="file" id="fileInput">
+
+<h3>Option 2: Paste CSV (recommended on iPhone)</h3>
+<textarea id="csvInput" rows="8" placeholder="Paste CSV data here..."></textarea>
+<button onclick="loadCSV()">Load Data</button>
 
 <select id="clubFilter">
 <option value="all">All Clubs</option>
 </select>
 
+<div id="debug"></div>
+
 <table id="dataTable"></table>
 
 <script>
 let allData = [];
+let clubKey = null;
 
+// FILE UPLOAD
 document.getElementById('fileInput').addEventListener('change', function(e){
     const file = e.target.files[0];
+    if(!file) return;
+
     const reader = new FileReader();
 
     reader.onload = function(event){
         const text = event.target.result;
         parseCSV(text);
     };
+
     reader.readAsText(file);
 });
 
+// PASTE CSV
+function loadCSV(){
+    const text = document.getElementById('csvInput').value;
+    if(!text.trim()){
+        alert("Paste CSV first");
+        return;
+    }
+    parseCSV(text);
+}
+
+// PARSE CSV
 function parseCSV(text){
-    const rows = text.split('\n').map(r => r.split(','));
-    const headers = rows[0];
+    const rows = text.split('\n')
+        .filter(r => r.trim() !== '')
+        .map(r => r.split(','));
+
+    const headers = rows[0].map(h => h.trim());
+
+    document.getElementById('debug').textContent =
+        "Detected Headers:\n" + headers.join('\n');
+
+    // Find club column automatically
+    clubKey = headers.find(h => h.toLowerCase().includes("club"));
+
     allData = rows.slice(1).map(row => {
         let obj = {};
-        headers.forEach((h,i)=> obj[h.trim()] = row[i]);
+        headers.forEach((h,i)=> obj[h] = row[i]);
         return obj;
     });
 
@@ -50,11 +86,17 @@ function parseCSV(text){
     renderTable(allData);
 }
 
+// POPULATE FILTER
 function populateClubFilter(){
-    const clubs = [...new Set(allData.map(d => d.Club))];
     const select = document.getElementById('clubFilter');
+    select.innerHTML = '<option value="all">All Clubs</option>';
+
+    if(!clubKey) return;
+
+    const clubs = [...new Set(allData.map(d => d[clubKey]))];
 
     clubs.forEach(c => {
+        if(!c) return;
         let opt = document.createElement('option');
         opt.value = c;
         opt.textContent = c;
@@ -62,18 +104,25 @@ function populateClubFilter(){
     });
 }
 
+// FILTER CHANGE
 document.getElementById('clubFilter').addEventListener('change', function(){
     const val = this.value;
-    if(val === "all"){
+
+    if(val === "all" || !clubKey){
         renderTable(allData);
     } else {
-        renderTable(allData.filter(d => d.Club === val));
+        renderTable(allData.filter(d => d[clubKey] === val));
     }
 });
 
+// RENDER TABLE
 function renderTable(data){
     const table = document.getElementById('dataTable');
-    if(data.length === 0) return;
+
+    if(data.length === 0){
+        table.innerHTML = "<tr><td>No data</td></tr>";
+        return;
+    }
 
     let html = "<tr>";
     Object.keys(data[0]).forEach(h => html += `<th>${h}</th>`);
@@ -81,7 +130,7 @@ function renderTable(data){
 
     data.forEach(row=>{
         html += "<tr>";
-        Object.values(row).forEach(v => html += `<td>${v}</td>`);
+        Object.values(row).forEach(v => html += `<td>${v || ''}</td>`);
         html += "</tr>";
     });
 
