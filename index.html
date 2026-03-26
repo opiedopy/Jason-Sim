@@ -6,7 +6,7 @@
     <title>Jason - GolfSim App</title>
     
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.jpg">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -23,13 +23,11 @@
         h1 { color: #00d4ff; font-size: 28px; margin-bottom: 10px; text-align: center; }
         h3 { font-size: 20px; color: #aaa; margin-top: 25px; text-align: center; }
 
-        /* Custom File Upload Styling to prevent truncation */
         .file-upload-wrapper {
             position: relative;
             margin-top: 15px;
         }
 
-        /* Hide the default input but keep it functional */
         input[type="file"] {
             position: absolute;
             left: 0;
@@ -40,7 +38,6 @@
             cursor: pointer;
         }
 
-        /* The "Fake" button that looks better */
         .custom-file-btn {
             display: block;
             background: #222;
@@ -63,7 +60,7 @@
             border-radius: 8px;
             box-sizing: border-box;
             margin-top: 15px;
-            appearance: none; /* Modern look for mobile */
+            appearance: none;
         }
 
         table { 
@@ -117,7 +114,7 @@
     
     <div class="file-upload-wrapper">
         <div class="custom-file-btn" id="fileBtnText">📁 Tap to Select CSV</div>
-        <input type="file" id="fileInput" accept=".csv">
+        <input type="file" id="fileInput" accept=".csv, text/csv, text/plain, application/vnd.ms-excel">
     </div>
 
     <select id="clubFilter">
@@ -146,7 +143,6 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// FILE UPLOAD - with text update logic
 const fileInput = document.getElementById('fileInput');
 const fileBtnText = document.getElementById('fileBtnText');
 
@@ -154,7 +150,6 @@ fileInput.addEventListener('change', function(e){
     const file = e.target.files[0];
     if(!file) return;
 
-    // Update the button text to show the filename clearly
     fileBtnText.textContent = "✅ " + file.name;
     fileBtnText.style.borderColor = "#00d4ff";
 
@@ -229,5 +224,6 @@ function renderTable(data){
 
 </body>
 </html>
+
 
 
