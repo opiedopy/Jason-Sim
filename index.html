@@ -6,78 +6,97 @@
     <title>Jason - GolfSim Pro</title>
     <style>
         :root { --primary: #00d4ff; --bg: #0a0a0a; --card: #1a1a1a; }
-        body { font-family: -apple-system, system-ui, sans-serif; padding: 10px; background: var(--bg); color: #eee; margin: 0; padding-bottom: 80px; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: #eee; margin: 0; padding: 0; overflow-x: hidden; }
         
-        h1 { color: var(--primary); font-size: 18px; text-align: center; margin: 5px 0; text-transform: uppercase; }
+        /* MAIN NAVIGATION TABS */
+        .nav-tabs { display: flex; background: #000; border-bottom: 2px solid #333; position: sticky; top: 0; z-index: 1000; }
+        .tab-link { flex: 1; padding: 15px; text-align: center; font-weight: 900; font-size: 13px; color: #666; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .tab-link.active { color: var(--primary); border-bottom: 3px solid var(--primary); background: #111; }
 
+        /* Page Containers */
+        .page { display: none; padding: 15px; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Simulator Styles */
+        h1 { color: var(--primary); font-size: 18px; text-align: center; margin-bottom: 15px; }
         .preset-row { display: flex; gap: 8px; margin-bottom: 12px; }
-        .preset-btn { flex: 1; background: #222; color: #888; border: 1px solid #333; padding: 12px; border-radius: 8px; font-size: 11px; font-weight: 900; cursor: pointer; }
+        .preset-btn { flex: 1; background: #222; color: #888; border: 1px solid #333; padding: 12px; border-radius: 8px; font-size: 10px; font-weight: 900; cursor: pointer; }
         .preset-btn.active { background: var(--primary); color: #000; border-color: #fff; }
 
-        .card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 15px; }
+        .card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #333; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         label { display: block; font-size: 9px; color: var(--primary); text-transform: uppercase; margin-bottom: 4px; font-weight: bold; }
-        input { width: 100%; background: #000; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; font-size: 18px; text-align: center; }
+        input { width: 100%; background: #000; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; font-size: 18px; text-align: center; outline: none; }
 
-        #interactiveWrapper { margin: 15px 0; border: 2px solid #333; border-radius: 10px; background: #000; height: 240px; position: relative; }
-        #trajectoryCanvas { width: 100%; height: 100%; display: block; border-radius: 8px; }
+        #interactiveWrapper { margin: 15px 0; border: 2px solid #333; border-radius: 10px; background: #000; height: 250px; }
+        #trajectoryCanvas { width: 100%; height: 100%; display: block; }
 
         .result-box { background: var(--primary); color: #000; padding: 15px; border-radius: 10px; text-align: center; }
         .result-val { font-size: 32px; font-weight: 900; display: block; }
-        
-        #lockBtn { background: none; border: none; color: #333; font-size: 20px; cursor: pointer; float: right; margin-top: 10px; }
-        #adminArea { display: none; margin-top: 25px; border-top: 1px solid #333; padding-top: 15px; }
-        .admin-visible { display: block !important; }
-        
-        .table-window { width: 100%; max-height: 400px; overflow: auto; background: #111; border: 1px solid #333; border-radius: 8px; margin-top: 12px; }
-        table { border-collapse: collapse; width: 100%; font-size: 11px; color: #fff; }
-        th { background: #222; color: var(--primary); padding: 10px; border: 1px solid #333; position: sticky; top: 0; }
-        td { padding: 8px; border: 1px solid #333; text-align: center; }
 
-        .sticky-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); color: #000; text-align: center; padding: 12px 0; font-weight: 900; font-size: 12px; }
+        /* CSV Vault Styles */
+        .vault-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .table-window { width: 100%; max-height: 70vh; overflow: auto; background: #111; border: 1px solid #333; border-radius: 8px; }
+        table { border-collapse: collapse; width: 100%; font-size: 11px; }
+        th { background: #222; color: var(--primary); padding: 12px; border: 1px solid #333; position: sticky; top: 0; }
+        td { padding: 10px; border: 1px solid #333; text-align: center; white-space: nowrap; }
+
+        .sticky-footer { position: fixed; bottom: 0; width: 100%; background: var(--primary); color: #000; text-align: center; padding: 10px 0; font-weight: 900; font-size: 11px; }
     </style>
 </head>
 <body>
 
-    <h1>🏌️ JASON GOLFSIM PRO</h1>
+    <nav class="nav-tabs">
+        <div class="tab-link active" onclick="showPage('sim', this)">Simulator</div>
+        <div class="tab-link" onclick="showPage('vault', this)">Data Vault</div>
+    </nav>
 
-    <div class="preset-row">
-        <button class="preset-btn active" id="btn-driver" onclick="setPreset('driver')">DRIVER</button>
-        <button class="preset-btn" id="btn-iron" onclick="setPreset('iron')">7-IRON</button>
-        <button class="preset-btn" id="btn-wedge" onclick="setPreset('wedge')">WEDGE</button>
-    </div>
-
-    <div class="card">
-        <div class="grid">
-            <div><label>Club Speed (mph)</label><input type="number" id="clubSpeed" value="111" oninput="runPhysics()"></div>
-            <div><label>Attack Angle (°)</label><input type="number" id="attackAngle" value="3.6" oninput="runPhysics()"></div>
-            <div><label>Launch Angle (°)</label><input type="number" id="launchAngle" value="12.0" oninput="runPhysics()"></div>
-            <div><label>Smash Factor</label><input type="number" id="smashFactor" value="1.45" step="0.01" oninput="runPhysics()"></div>
+    <div id="simPage" class="page active">
+        <h1>🏌️ JASON GOLFSIM PRO</h1>
+        <div class="preset-row">
+            <button class="preset-btn active" id="btn-driver" onclick="setPreset('driver')">DRIVER</button>
+            <button class="preset-btn" id="btn-iron" onclick="setPreset('iron')">7-IRON</button>
+            <button class="preset-btn" id="btn-wedge" onclick="setPreset('wedge')">WEDGE</button>
         </div>
 
-        <div id="interactiveWrapper">
-            <canvas id="trajectoryCanvas"></canvas>
-        </div>
-
-        <div class="result-box">
+        <div class="card">
             <div class="grid">
-                <div><small>CARRY</small><span class="result-val" id="resDist">--</span></div>
-                <div><small>HEIGHT</small><span class="result-val" id="resHeight">--</span></div>
+                <div><label>Club Speed</label><input type="number" id="clubSpeed" value="111" oninput="runPhysics()"></div>
+                <div><label>Attack Angle</label><input type="number" id="attackAngle" value="3.6" oninput="runPhysics()"></div>
+                <div><label>Launch Angle</label><input type="number" id="launchAngle" value="12.0" oninput="runPhysics()"></div>
+                <div><label>Smash Factor</label><input type="number" id="smashFactor" value="1.45" step="0.01" oninput="runPhysics()"></div>
+            </div>
+
+            <div id="interactiveWrapper">
+                <canvas id="trajectoryCanvas"></canvas>
+            </div>
+
+            <div class="result-box">
+                <div class="grid">
+                    <div><small>CARRY</small><span class="result-val" id="resDist">--</span></div>
+                    <div><small>HEIGHT</small><span class="result-val" id="resHeight">--</span></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <button id="lockBtn" onclick="toggleAdmin()">🔒</button>
-    
-    <div id="adminArea">
-        <h3 style="font-size: 14px; color: var(--primary); margin: 0;">TRACKMAN CSV VAULT</h3>
-        <input type="file" id="fileInput" style="margin: 15px 0; color: #fff;">
-        <div class="table-window">
-            <table id="dataTable"></table>
+    <div id="vaultPage" class="page">
+        <div class="vault-header">
+            <h2 style="color: var(--primary); margin: 0;">TRACKMAN DATA</h2>
+            <button onclick="toggleLock()" id="lockBtn" style="background:none; border:none; font-size:20px;">🔒</button>
         </div>
+        
+        <div id="adminContent" style="display:none;">
+            <input type="file" id="fileInput" style="margin: 15px 0; color: #fff;">
+            <div class="table-window">
+                <table id="dataTable"></table>
+            </div>
+        </div>
+        <p id="lockMsg" style="text-align:center; color:#444; margin-top:50px;">Unlock with PIN to view data.</p>
     </div>
 
-    <footer class="sticky-footer"> &copy; JMM & bull; 2026 </footer>
+    <footer class="sticky-footer"> &copy; JMM &bull; 2026 </footer>
 
 <script>
     const presets = {
@@ -86,6 +105,22 @@
         wedge: { launch: 30.0, smash: 1.22, attack: -5.0 }
     };
 
+    function showPage(pageId, el) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+        document.getElementById(pageId + 'Page').classList.add('active');
+        el.classList.add('active');
+        if(pageId === 'sim') runPhysics();
+    }
+
+    function toggleLock() {
+        if (prompt("Enter Admin PIN:") === "1234") {
+            document.getElementById('adminContent').style.display = 'block';
+            document.getElementById('lockMsg').style.display = 'none';
+            document.getElementById('lockBtn').textContent = "🔓";
+        }
+    }
+
     function setPreset(type) {
         document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('btn-' + type).classList.add('active');
@@ -93,12 +128,6 @@
         document.getElementById('smashFactor').value = presets[type].smash;
         document.getElementById('attackAngle').value = presets[type].attack;
         runPhysics();
-    }
-
-    function toggleAdmin() {
-        if (prompt("Enter Admin PIN:") === "1234") {
-            document.getElementById('adminArea').classList.toggle('admin-visible');
-        }
     }
 
     function runPhysics() {
@@ -130,6 +159,7 @@
 
     function drawPlot(pts, totalX, totalY) {
         const canvas = document.getElementById('trajectoryCanvas');
+        if(!canvas) return;
         const ctx = canvas.getContext('2d');
         canvas.width = canvas.offsetWidth * 2; canvas.height = canvas.offsetHeight * 2;
         ctx.scale(2, 2);
