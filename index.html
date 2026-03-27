@@ -3,142 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jason - GolfSim Pro</title>
+    <title>Jason - GolfSim Pro v6.0</title>
     <style>
-        :root { --primary: #00d4ff; --bg: #0a0a0a; --card: #1a1a1a; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: #eee; margin: 0; padding: 0; overflow-x: hidden; }
+        :root { --primary: #00d4ff; --bg: #0a0a0a; --card: #1a1a1a; --danger: #ff4444; --success: #00ff00; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: #eee; margin: 0; padding-bottom: 80px; }
         
-        /* MAIN NAVIGATION TABS */
+        /* NAVIGATION */
         .nav-tabs { display: flex; background: #000; border-bottom: 2px solid #333; position: sticky; top: 0; z-index: 1000; }
-        .tab-link { flex: 1; padding: 15px; text-align: center; font-weight: 900; font-size: 13px; color: #666; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .tab-link { flex: 1; padding: 15px; text-align: center; font-weight: 900; font-size: 11px; color: #555; cursor: pointer; text-transform: uppercase; }
         .tab-link.active { color: var(--primary); border-bottom: 3px solid var(--primary); background: #111; }
 
-        /* Page Containers */
-        .page { display: none; padding: 15px; animation: fadeIn 0.3s ease; }
+        .page { display: none; padding: 15px; animation: fadeIn 0.2s ease; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Simulator Styles */
-        h1 { color: var(--primary); font-size: 18px; text-align: center; margin-bottom: 15px; }
-        .preset-row { display: flex; gap: 8px; margin-bottom: 12px; }
-        .preset-btn { flex: 1; background: #222; color: #888; border: 1px solid #333; padding: 12px; border-radius: 8px; font-size: 10px; font-weight: 900; cursor: pointer; }
-        .preset-btn.active { background: var(--primary); color: #000; border-color: #fff; }
+        /* DYNAMIC CLUB SELECTOR */
+        .club-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; -webkit-overflow-scrolling: touch; }
+        .club-chip { flex: 0 0 auto; background: #222; color: #888; border: 1px solid #333; padding: 8px 16px; border-radius: 20px; font-size: 11px; font-weight: 800; cursor: pointer; }
+        .club-chip.active { background: var(--primary); color: #000; border-color: #fff; }
 
-        .card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #333; }
+        /* SIMULATOR CARD */
+        .card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        label { display: block; font-size: 9px; color: var(--primary); text-transform: uppercase; margin-bottom: 4px; font-weight: bold; }
+        label { display: block; font-size: 9px; color: var(--primary); text-transform: uppercase; font-weight: 900; margin-bottom: 4px; }
         input { width: 100%; background: #000; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; font-size: 18px; text-align: center; outline: none; }
 
-        #interactiveWrapper { margin: 15px 0; border: 2px solid #333; border-radius: 10px; background: #000; height: 250px; }
+        #interactiveWrapper { margin: 15px 0; border: 2px solid #333; border-radius: 10px; background: #000; height: 260px; position: relative; }
         #trajectoryCanvas { width: 100%; height: 100%; display: block; }
 
-        .result-box { background: var(--primary); color: #000; padding: 15px; border-radius: 10px; text-align: center; }
-        .result-val { font-size: 32px; font-weight: 900; display: block; }
+        /* CONTROLS */
+        .action-row { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; padding: 14px; border-radius: 8px; font-weight: 900; cursor: pointer; border: none; text-transform: uppercase; font-size: 11px; }
+        .btn-save { background: var(--success); color: #000; }
+        .btn-ghost { background: #333; color: #fff; border: 1px solid #444; }
 
-        /* CSV Vault Styles */
-        .vault-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .table-window { width: 100%; max-height: 70vh; overflow: auto; background: #111; border: 1px solid #333; border-radius: 8px; }
+        /* ANALYTICS TABLE */
+        .table-window { width: 100%; overflow: auto; background: #111; border: 1px solid #333; border-radius: 8px; }
         table { border-collapse: collapse; width: 100%; font-size: 11px; }
         th { background: #222; color: var(--primary); padding: 12px; border: 1px solid #333; position: sticky; top: 0; }
-        td { padding: 10px; border: 1px solid #333; text-align: center; white-space: nowrap; }
+        td { padding: 10px; border: 1px solid #333; text-align: center; }
+        .outlier { color: var(--danger); text-decoration: line-through; opacity: 0.5; }
+        .del-btn { background: none; border: none; color: var(--danger); font-weight: 900; cursor: pointer; }
 
-        .sticky-footer { position: fixed; bottom: 0; width: 100%; background: var(--primary); color: #000; text-align: center; padding: 10px 0; font-weight: 900; font-size: 11px; }
+        .sticky-footer { position: fixed; bottom: 0; width: 100%; background: var(--primary); color: #000; text-align: center; padding: 12px 0; font-weight: 900; font-size: 11px; z-index: 1001; }
     </style>
 </head>
 <body>
 
     <nav class="nav-tabs">
-        <div class="tab-link active" onclick="showPage('sim', this)">Simulator</div>
-        <div class="tab-link" onclick="showPage('vault', this)">Data Vault</div>
+        <div class="tab-link active" onclick="showPage('sim', this)">Sim</div>
+        <div class="tab-link" onclick="showPage('data', this)">Analytics</div>
+        <div class="tab-link" onclick="showPage('bag', this)">My Bag</div>
     </nav>
 
     <div id="simPage" class="page active">
-        <h1>🏌️ JASON GOLFSIM PRO</h1>
-        <div class="preset-row">
-            <button class="preset-btn active" id="btn-driver" onclick="setPreset('driver')">DRIVER</button>
-            <button class="preset-btn" id="btn-iron" onclick="setPreset('iron')">7-IRON</button>
-            <button class="preset-btn" id="btn-wedge" onclick="setPreset('wedge')">WEDGE</button>
-        </div>
+        <div class="club-scroll" id="clubSelector"></div>
 
         <div class="card">
             <div class="grid">
                 <div><label>Club Speed</label><input type="number" id="clubSpeed" value="111" oninput="runPhysics()"></div>
-                <div><label>Attack Angle</label><input type="number" id="attackAngle" value="3.6" oninput="runPhysics()"></div>
-                <div><label>Launch Angle</label><input type="number" id="launchAngle" value="12.0" oninput="runPhysics()"></div>
-                <div><label>Smash Factor</label><input type="number" id="smashFactor" value="1.45" step="0.01" oninput="runPhysics()"></div>
+                <div><label>Smash</label><input type="number" id="smashFactor" value="1.45" step="0.01" oninput="runPhysics()"></div>
             </div>
 
             <div id="interactiveWrapper">
                 <canvas id="trajectoryCanvas"></canvas>
             </div>
 
-            <div class="result-box">
-                <div class="grid">
-                    <div><small>CARRY</small><span class="result-val" id="resDist">--</span></div>
-                    <div><small>HEIGHT</small><span class="result-val" id="resHeight">--</span></div>
-                </div>
+            <div class="action-row">
+                <button class="btn btn-save" onclick="saveShot()">Record Shot</button>
+                <button class="btn btn-ghost" id="ghostToggle" onclick="toggleGhost()">Overlay Last</button>
             </div>
         </div>
     </div>
 
-    <div id="vaultPage" class="page">
-        <div class="vault-header">
-            <h2 style="color: var(--primary); margin: 0;">TRACKMAN DATA</h2>
-            <button onclick="toggleLock()" id="lockBtn" style="background:none; border:none; font-size:20px;">🔒</button>
+    <div id="dataPage" class="page">
+        <h2 style="color:var(--primary); font-size: 14px; margin-bottom: 10px;">SESSION DATA (Remove Outliers)</h2>
+        <div class="table-window">
+            <table>
+                <thead>
+                    <tr><th>Club</th><th>Speed</th><th>Carry</th><th>Height</th><th>X</th></tr>
+                </thead>
+                <tbody id="shotLog"></tbody>
+            </table>
         </div>
-        
-        <div id="adminContent" style="display:none;">
-            <input type="file" id="fileInput" style="margin: 15px 0; color: #fff;">
-            <div class="table-window">
-                <table id="dataTable"></table>
-            </div>
-        </div>
-        <p id="lockMsg" style="text-align:center; color:#444; margin-top:50px;">Unlock with PIN to view data.</p>
     </div>
 
-    <footer class="sticky-footer"> &copy; JMM &bull; 2026 </footer>
+    <div id="bagPage" class="page">
+        <h2 style="color:var(--primary); font-size: 14px;">MANAGE BAG (Unlimited)</h2>
+        <p style="font-size: 11px; color: #888;">Add specialty wedges or experimental clubs below.</p>
+        <div class="card">
+            <label>New Club Name (e.g. 64° Wedge)</label>
+            <input type="text" id="newClubName" placeholder="Club Name..." style="text-align: left; margin-bottom: 10px;">
+            <button class="btn btn-save" style="width:100%" onclick="addClub()">Add to Bag</button>
+        </div>
+    </div>
+
+    <footer class="sticky-footer"> GOLFSIM PRO &bull; JMM 2026 </footer>
 
 <script>
-    const presets = {
-        driver: { launch: 12.0, smash: 1.45, attack: 3.6 },
-        iron: { launch: 18.0, smash: 1.33, attack: -3.0 },
-        wedge: { launch: 30.0, smash: 1.22, attack: -5.0 }
-    };
+    // Initial State
+    let myBag = [
+        { name: 'Driver', launch: 12, smash: 1.45 },
+        { name: '7-Iron', launch: 18, smash: 1.33 },
+        { name: 'Wedge', launch: 32, smash: 1.22 }
+    ];
+    let sessionShots = [];
+    let currentClub = myBag[0];
+    let ghostPath = null;
+    let showGhost = false;
 
-    function showPage(pageId, el) {
+    // Navigation
+    function showPage(pId, el) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
-        document.getElementById(pageId + 'Page').classList.add('active');
+        document.getElementById(pId + 'Page').classList.add('active');
         el.classList.add('active');
-        if(pageId === 'sim') runPhysics();
+        if(pId === 'sim') runPhysics();
     }
 
-    function toggleLock() {
-        if (prompt("Enter Admin PIN:") === "1234") {
-            document.getElementById('adminContent').style.display = 'block';
-            document.getElementById('lockMsg').style.display = 'none';
-            document.getElementById('lockBtn').textContent = "🔓";
-        }
+    // Bag Logic
+    function renderBag() {
+        const container = document.getElementById('clubSelector');
+        container.innerHTML = myBag.map(club => `
+            <div class="club-chip ${currentClub.name === club.name ? 'active' : ''}" 
+                 onclick="selectClub('${club.name}')">${club.name}</div>
+        `).join('');
     }
 
-    function setPreset(type) {
-        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('btn-' + type).classList.add('active');
-        document.getElementById('launchAngle').value = presets[type].launch;
-        document.getElementById('smashFactor').value = presets[type].smash;
-        document.getElementById('attackAngle').value = presets[type].attack;
+    function selectClub(name) {
+        currentClub = myBag.find(c => c.name === name);
+        document.getElementById('smashFactor').value = currentClub.smash;
+        renderBag();
         runPhysics();
     }
 
+    function addClub() {
+        const name = document.getElementById('newClubName').value;
+        if(!name) return;
+        myBag.push({ name: name, launch: 20, smash: 1.30 });
+        document.getElementById('newClubName').value = '';
+        renderBag();
+        alert(name + " added to your bag!");
+    }
+
+    // Simulator Logic
     function runPhysics() {
-        const clubSpeed = parseFloat(document.getElementById('clubSpeed').value) || 0;
+        const speed = parseFloat(document.getElementById('clubSpeed').value) || 0;
         const smash = parseFloat(document.getElementById('smashFactor').value) || 0;
-        const launch = parseFloat(document.getElementById('launchAngle').value) || 0;
+        const ballSpeed = (speed * smash) * 0.488889;
+        const angleRad = currentClub.launch * (Math.PI / 180);
 
-        const ballSpeedYps = (clubSpeed * smash) * 0.488889;
-        const angleRad = launch * (Math.PI / 180);
-
-        let vx = ballSpeedYps * Math.cos(angleRad), vy = ballSpeedYps * Math.sin(angleRad);
+        let vx = ballSpeed * Math.cos(angleRad), vy = ballSpeed * Math.sin(angleRad);
         const g = 10.72, drag = 0.0020, lift = 0.0006;
         let x = 0, y = 0.5, dt = 0.01, points = [], maxH = 0;
 
@@ -152,49 +167,78 @@
             points.push({x: x, y: y});
             if (y <= 0) break;
         }
-        document.getElementById('resDist').textContent = Math.round(x) + " yds";
-        document.getElementById('resHeight').textContent = Math.round(maxH * 3) + " ft";
         drawPlot(points, x, maxH);
+        return { x, maxH, points };
     }
 
     function drawPlot(pts, totalX, totalY) {
         const canvas = document.getElementById('trajectoryCanvas');
-        if(!canvas) return;
         const ctx = canvas.getContext('2d');
         canvas.width = canvas.offsetWidth * 2; canvas.height = canvas.offsetHeight * 2;
         ctx.scale(2, 2);
         const w = canvas.offsetWidth, h = canvas.offsetHeight, pad = 25;
 
         ctx.fillStyle = "#000"; ctx.fillRect(0, 0, w, h);
-        const scaleX = (w - pad * 2) / Math.max(totalX, 280);
-        const scaleY = (h - pad * 2) / Math.max(totalY, 50);
+        const scaleX = (w - pad * 2) / 300; 
+        const scaleY = (h - pad * 2) / 60;
 
-        ctx.strokeStyle = "#333"; ctx.lineWidth = 1; ctx.beginPath();
-        ctx.moveTo(pad, h-pad); ctx.lineTo(w-pad, h-pad); ctx.stroke();
+        // Ghost Shot (Overlay)
+        if(showGhost && ghostPath) {
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+            ctx.lineWidth = 2; ctx.beginPath();
+            ctx.moveTo(pad, h-pad);
+            ghostPath.forEach(p => ctx.lineTo(pad + (p.x * scaleX), (h - pad) - (p.y * scaleY)));
+            ctx.stroke();
+        }
 
-        ctx.strokeStyle = "#00d4ff"; ctx.lineWidth = 4; ctx.beginPath();
+        // Current Shot
+        ctx.strokeStyle = var(--primary); ctx.lineWidth = 4; ctx.beginPath();
         ctx.moveTo(pad, h - pad);
         pts.forEach(p => ctx.lineTo(pad + (p.x * scaleX), (h - pad) - (p.y * scaleY)));
         ctx.stroke();
-
-        ctx.fillStyle = "#fff"; ctx.beginPath();
-        ctx.arc(pad + (totalX * scaleX), h - pad, 4, 0, Math.PI * 2); ctx.fill();
     }
 
-    document.getElementById('fileInput').addEventListener('change', function(e){
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = function(event){
-            const rows = event.target.result.split('\n').map(r => r.split(',')).filter(r => r.length > 1);
-            let html = "<thead><tr>" + rows[0].map(h => `<th>${h.trim()}</th>`).join('') + "</tr></thead><tbody>";
-            rows.slice(1).forEach(row => html += "<tr>" + row.map(v => `<td>${v.trim()}</td>`).join('') + "</tr>");
-            document.getElementById('dataTable').innerHTML = html + "</tbody>";
+    // Analytics Logic
+    function saveShot() {
+        const data = runPhysics();
+        const shot = {
+            id: Date.now(),
+            club: currentClub.name,
+            speed: document.getElementById('clubSpeed').value,
+            carry: Math.round(data.x),
+            height: Math.round(data.maxH * 3),
+            points: data.points
         };
-        reader.readAsText(file);
-    });
+        sessionShots.push(shot);
+        ghostPath = data.points; // Auto-set ghost to last shot
+        updateShotLog();
+    }
 
-    window.onload = runPhysics;
+    function toggleGhost() {
+        showGhost = !showGhost;
+        document.getElementById('ghostToggle').style.borderColor = showGhost ? "var(--primary)" : "#444";
+        runPhysics();
+    }
+
+    function updateShotLog() {
+        const tbody = document.getElementById('shotLog');
+        tbody.innerHTML = sessionShots.map(s => `
+            <tr>
+                <td>${s.club}</td>
+                <td>${s.speed}</td>
+                <td>${s.carry}y</td>
+                <td>${s.height}ft</td>
+                <td><button class="del-btn" onclick="removeShot(${s.id})">❌</button></td>
+            </tr>
+        `).reverse().join('');
+    }
+
+    function removeShot(id) {
+        sessionShots = sessionShots.filter(s => s.id !== id);
+        updateShotLog();
+    }
+
+    window.onload = () => { renderBag(); runPhysics(); };
 </script>
 </body>
 </html>
