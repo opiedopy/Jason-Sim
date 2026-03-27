@@ -11,7 +11,7 @@
 
     <style>
         :root { --primary: #00d4ff; --bg: #111; --card: #222; --danger: #ff4444; --success: #00ff00; }
-        body { font-family: -apple-system, system-ui, sans-serif; padding: 15px; background: var(--bg); color: #eee; margin: 0; padding-bottom: 80px; }
+        body { font-family: -apple-system, system-ui, sans-serif; padding: 15px; background: var(--bg); color: #eee; margin: 0; padding-bottom: 100px; }
         
         #splash {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -20,38 +20,42 @@
         }
         #splash img { width: 140px; height: 140px; border-radius: 20px; margin-bottom: 20px; }
 
-        h1 { color: var(--primary); font-size: 20px; text-align: center; margin: 10px 0; font-weight: 700; }
+        h1 { color: var(--primary); font-size: 20px; text-align: center; margin: 10px 0; font-weight: 700; text-transform: uppercase; }
         
         /* Club Selector */
         .preset-row { display: flex; gap: 8px; margin-bottom: 12px; }
-        .preset-btn { flex: 1; background: #333; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
-        .preset-btn.active { background: var(--primary); color: #000; border-color: #fff; }
+        .preset-btn { flex: 1; background: #333; color: #fff; border: 1px solid #444; padding: 12px; border-radius: 8px; font-size: 11px; font-weight: 900; cursor: pointer; transition: 0.2s; }
+        .preset-btn.active { background: var(--primary); color: #000; border-color: #fff; box-shadow: 0 0 10px rgba(0,212,255,0.4); }
 
         .card { background: var(--card); padding: 15px; border-radius: 16px; margin-bottom: 12px; border: 1px solid #333; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        label { display: block; font-size: 10px; color: var(--primary); text-transform: uppercase; margin-bottom: 5px; }
+        label { display: block; font-size: 10px; color: var(--primary); text-transform: uppercase; margin-bottom: 5px; font-weight: 700; }
         input { width: 100%; background: #000; border: 2px solid #444; color: #fff; padding: 12px; border-radius: 10px; box-sizing: border-box; font-size: 18px; outline: none; text-align: center; }
         
-        #trajectoryCanvas { width: 100%; height: 200px; background: #000; border-radius: 12px; margin: 12px 0; border: 1px solid #444; }
-        .result-box { background: linear-gradient(135deg, var(--primary), #008fb3); color: #000; padding: 15px; border-radius: 12px; text-align: center; }
-        .result-val { font-size: 28px; font-weight: 900; display: block; }
+        #trajectoryCanvas { width: 100%; height: 220px; background: #000; border-radius: 12px; margin: 12px 0; border: 1px solid #444; }
+        .result-box { background: linear-gradient(135deg, var(--primary), #008fb3); color: #000; padding: 18px; border-radius: 12px; text-align: center; }
+        .result-val { font-size: 32px; font-weight: 900; display: block; }
         
-        .admin-section { border: 2px dashed #333; padding: 15px; border-radius: 12px; margin-top: 10px; display: none; }
+        /* Admin Section */
+        #lockBtn { background: none; border: none; color: #666; font-size: 22px; cursor: pointer; float: right; margin-top: -5px; }
+        .admin-section { border: 2px dashed #333; padding: 15px; border-radius: 12px; margin-top: 15px; display: none; background: #151515; }
         .admin-visible { display: block; }
-        #lockBtn { background: none; border: none; color: #666; font-size: 20px; cursor: pointer; float: right; }
 
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; font-size: 11px; }
-        th { background: #333; color: var(--primary); padding: 10px; text-align: center; }
-        td { border: 1px solid #333; padding: 8px; text-align: center; }
+        /* Data Table - FIXED VISIBILITY */
+        .table-container { overflow-x: auto; width: 100%; margin-top: 20px; border-radius: 8px; border: 1px solid #333; background: #000; min-height: 50px; }
+        table { border-collapse: collapse; width: 100%; font-size: 12px; color: #fff; }
+        th { background: #222; color: var(--primary); padding: 12px; text-align: center; border-bottom: 2px solid #444; white-space: nowrap; }
+        td { border: 1px solid #222; padding: 10px; text-align: center; white-space: nowrap; }
+        tr:nth-child(even) { background: #111; }
         
-        .sticky-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); color: #000; text-align: center; padding: 12px 0; font-weight: 900; font-size: 12px; }
+        .sticky-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); color: #000; text-align: center; padding: 12px 0; font-weight: 900; font-size: 12px; z-index: 1000; }
     </style>
 </head>
 <body>
 
     <div id="splash">
         <img src="icon-png.png" alt="Logo">
-        <h2 style="color:white; font-weight:300;">GOLFSIM PRO</h2>
+        <h2 style="color:white; font-weight:300; letter-spacing:2px;">GOLFSIM PRO</h2>
     </div>
 
     <h1>🏌️ JASON GOLFSIM PRO</h1>
@@ -64,7 +68,7 @@
 
     <div class="card">
         <div class="grid">
-            <div><label>Club Speed (mph)</label><input type="number" id="clubSpeed" value="100" oninput="runPhysics()"></div>
+            <div><label>Club Speed (mph)</label><input type="number" id="clubSpeed" value="111" oninput="runPhysics()"></div>
             <div><label>Attack Angle (°)</label><input type="number" id="attackAngle" value="3.6" oninput="runPhysics()"></div>
             <div><label>Launch Angle (°)</label><input type="number" id="launchAngle" value="12.0" oninput="runPhysics()"></div>
             <div><label>Smash Factor</label><input type="number" id="smashFactor" value="1.45" step="0.01" oninput="runPhysics()"></div>
@@ -81,10 +85,13 @@
     </div>
 
     <button id="lockBtn" onclick="toggleAdmin()">🔒</button>
+    
     <div class="admin-section" id="adminArea">
         <label>Admin: Import Trackman CSV</label>
-        <input type="file" id="fileInput" style="margin-top:10px; color: #fff;">
-        <table id="dataTable"></table>
+        <input type="file" id="fileInput" style="margin-top:10px; color: #fff; width: 100%;">
+        <div class="table-container">
+            <table id="dataTable"></table>
+        </div>
     </div>
 
     <footer class="sticky-footer"> &copy; JMM &bull; 2026 </footer>
@@ -99,7 +106,6 @@
     function setPreset(type, btn) {
         document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        
         document.getElementById('launchAngle').value = presets[type].launch;
         document.getElementById('smashFactor').value = presets[type].smash;
         document.getElementById('attackAngle').value = presets[type].attack;
@@ -109,9 +115,10 @@
     function toggleAdmin() {
         const pin = prompt("Enter Admin PIN:");
         if (pin === "1234") {
-            document.getElementById('adminArea').classList.toggle('admin-visible');
-            document.getElementById('lockBtn').textContent = "🔓";
-        }
+            const area = document.getElementById('adminArea');
+            area.classList.toggle('admin-visible');
+            document.getElementById('lockBtn').textContent = area.classList.contains('admin-visible') ? "🔓" : "🔒";
+        } else { alert("Incorrect PIN"); }
     }
 
     function runPhysics() {
@@ -119,23 +126,20 @@
         const smash = parseFloat(document.getElementById('smashFactor').value) || 0;
         const launch = parseFloat(document.getElementById('launchAngle').value) || 0;
 
-        // Ball Speed in Yards per Second
         const ballSpeedYps = (clubSpeed * smash) * 0.488889;
         const angleRad = launch * (Math.PI / 180);
 
         let vx = ballSpeedYps * Math.cos(angleRad);
         let vy = ballSpeedYps * Math.sin(angleRad);
 
-        const g = 10.72, drag = 0.0018, lift = 0.0006;
+        const g = 10.72, drag = 0.0019, lift = 0.0006;
         let x = 0, y = 0.5, dt = 0.01, points = [], maxH = 0;
 
         for (let t = 0; t < 1500; t++) {
             let v = Math.sqrt(vx*vx + vy*vy);
             if (v < 0.1) break;
-
             let ax = -(drag * v * vx);
             let ay = -g - (drag * v * vy) + (lift * v * vx);
-
             vx += ax * dt; vy += ay * dt; x += vx * dt; y += vy * dt;
             if (y > maxH) maxH = y;
             points.push({x: x, y: y});
@@ -156,18 +160,44 @@
 
         ctx.fillStyle = "#000"; ctx.fillRect(0, 0, w, h);
         const scaleX = (w - pad * 2) / Math.max(totalX, 280);
-        const scaleY = (h - pad * 2) / Math.max(totalY, 40);
+        const scaleY = (h - pad * 2) / Math.max(totalY, 50);
 
-        ctx.strokeStyle = "#444"; ctx.beginPath();
-        ctx.moveTo(pad, h - pad); ctx.lineTo(w - pad, h - pad); ctx.stroke();
+        ctx.strokeStyle = "#333"; ctx.beginPath();
+        ctx.moveTo(pad, h-pad); ctx.lineTo(w-pad, h-pad); ctx.stroke();
 
-        ctx.strokeStyle = "#00d4ff"; ctx.lineWidth = 4; ctx.beginPath();
+        ctx.strokeStyle = "#00d4ff"; ctx.lineWidth = 3; ctx.beginPath();
         ctx.moveTo(pad, h - pad);
         pts.forEach(p => ctx.lineTo(pad + (p.x * scaleX), (h - pad) - (p.y * scaleY)));
         ctx.stroke();
 
         ctx.fillStyle = "#fff"; ctx.beginPath();
-        ctx.arc(pad + (totalX * scaleX), h - pad, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.arc(pad + (totalX * scaleX), h - pad, 3, 0, Math.PI * 2); ctx.fill();
+    }
+
+    document.getElementById('fileInput').addEventListener('change', function(e){
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(event){
+            const content = event.target.result;
+            const rows = content.split('\n').map(r => r.split(',')).filter(r => r.length > 1);
+            renderTable(rows);
+        };
+        reader.readAsText(file);
+    });
+
+    function renderTable(rows){
+        const table = document.getElementById('dataTable');
+        let html = "<thead><tr>";
+        rows[0].forEach(h => html += `<th>${h.trim()}</th>`);
+        html += "</tr></thead><tbody>";
+        rows.slice(1).forEach(row => {
+            html += "<tr>";
+            row.forEach(v => html += `<td>${v.trim()}</td>`);
+            html += "</tr>";
+        });
+        table.innerHTML = html + "</tbody>";
+        console.log("Table Rendered with " + rows.length + " rows.");
     }
 
     window.addEventListener('load', () => {
