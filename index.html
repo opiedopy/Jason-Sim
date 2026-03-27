@@ -6,49 +6,35 @@
     <title>Jason - GolfSim Pro</title>
     <style>
         :root { --primary: #00d4ff; --bg: #0a0a0a; --card: #1a1a1a; }
-        body { font-family: -apple-system, system-ui, sans-serif; padding: 10px; background: var(--bg); color: #eee; margin: 0; padding-bottom: 60px; }
+        body { font-family: -apple-system, system-ui, sans-serif; padding: 10px; background: var(--bg); color: #eee; margin: 0; padding-bottom: 80px; }
         
         h1 { color: var(--primary); font-size: 18px; text-align: center; margin: 5px 0; text-transform: uppercase; }
 
-        /* Club Presets */
-        .preset-row { display: flex; gap: 5px; margin-bottom: 10px; }
+        .preset-row { display: flex; gap: 8px; margin-bottom: 12px; }
         .preset-btn { flex: 1; background: #222; color: #888; border: 1px solid #333; padding: 12px; border-radius: 8px; font-size: 11px; font-weight: 900; cursor: pointer; }
         .preset-btn.active { background: var(--primary); color: #000; border-color: #fff; }
 
-        /* Sim Section */
-        .card { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid #333; margin-bottom: 15px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        label { display: block; font-size: 9px; color: var(--primary); text-transform: uppercase; margin-bottom: 3px; font-weight: bold; }
-        input { width: 100%; background: #000; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; box-sizing: border-box; font-size: 16px; text-align: center; }
+        .card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        label { display: block; font-size: 9px; color: var(--primary); text-transform: uppercase; margin-bottom: 4px; font-weight: bold; }
+        input { width: 100%; background: #000; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; font-size: 18px; text-align: center; }
 
-        /* THE GRAPH SCREEN */
-        #interactiveWrapper { margin: 10px 0; border: 1px solid #444; border-radius: 8px; background: #000; overflow: hidden; }
-        #trajectoryCanvas { width: 100%; height: 220px; display: block; }
+        #interactiveWrapper { margin: 15px 0; border: 2px solid #333; border-radius: 10px; background: #000; height: 240px; position: relative; }
+        #trajectoryCanvas { width: 100%; height: 100%; display: block; border-radius: 8px; }
 
         .result-box { background: var(--primary); color: #000; padding: 15px; border-radius: 10px; text-align: center; }
-        .result-val { font-size: 28px; font-weight: 900; display: block; }
+        .result-val { font-size: 32px; font-weight: 900; display: block; }
         
-        /* ADMIN & CSV TABLE AREA */
-        #lockBtn { background: none; border: none; color: #444; font-size: 18px; cursor: pointer; float: right; }
-        .admin-section { display: none; margin-top: 20px; border-top: 1px solid #333; padding-top: 15px; }
-        .admin-visible { display: block; }
+        #lockBtn { background: none; border: none; color: #333; font-size: 20px; cursor: pointer; float: right; margin-top: 10px; }
+        #adminArea { display: none; margin-top: 25px; border-top: 1px solid #333; padding-top: 15px; }
+        .admin-visible { display: block !important; }
         
-        /* NEW: Dedicated Table Container */
-        .table-window { 
-            width: 100%; 
-            max-height: 400px; 
-            overflow: auto; 
-            background: #111; 
-            border: 1px solid #333; 
-            border-radius: 8px;
-            margin-top: 10px;
-        }
+        .table-window { width: 100%; max-height: 400px; overflow: auto; background: #111; border: 1px solid #333; border-radius: 8px; margin-top: 12px; }
         table { border-collapse: collapse; width: 100%; font-size: 11px; color: #fff; }
-        th { background: #222; color: var(--primary); padding: 10px; border: 1px solid #333; position: sticky; top: 0; z-index: 10; }
+        th { background: #222; color: var(--primary); padding: 10px; border: 1px solid #333; position: sticky; top: 0; }
         td { padding: 8px; border: 1px solid #333; text-align: center; }
-        tr:nth-child(even) { background: #181818; }
 
-        .sticky-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); color: #000; text-align: center; padding: 10px 0; font-weight: 900; font-size: 11px; z-index: 100; }
+        .sticky-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); color: #000; text-align: center; padding: 12px 0; font-weight: 900; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -56,16 +42,16 @@
     <h1>🏌️ JASON GOLFSIM PRO</h1>
 
     <div class="preset-row">
-        <button class="preset-btn active" onclick="setPreset('driver', this)">DRIVER</button>
-        <button class="preset-btn" onclick="setPreset('iron', this)">7-IRON</button>
-        <button class="preset-btn" onclick="setPreset('wedge', this)">WEDGE</button>
+        <button class="preset-btn active" id="btn-driver" onclick="setPreset('driver')">DRIVER</button>
+        <button class="preset-btn" id="btn-iron" onclick="setPreset('iron')">7-IRON</button>
+        <button class="preset-btn" id="btn-wedge" onclick="setPreset('wedge')">WEDGE</button>
     </div>
 
     <div class="card">
         <div class="grid">
-            <div><label>Club Speed</label><input type="number" id="clubSpeed" value="111" oninput="runPhysics()"></div>
-            <div><label>Attack Angle</label><input type="number" id="attackAngle" value="3.6" oninput="runPhysics()"></div>
-            <div><label>Launch Angle</label><input type="number" id="launchAngle" value="12.0" oninput="runPhysics()"></div>
+            <div><label>Club Speed (mph)</label><input type="number" id="clubSpeed" value="111" oninput="runPhysics()"></div>
+            <div><label>Attack Angle (°)</label><input type="number" id="attackAngle" value="3.6" oninput="runPhysics()"></div>
+            <div><label>Launch Angle (°)</label><input type="number" id="launchAngle" value="12.0" oninput="runPhysics()"></div>
             <div><label>Smash Factor</label><input type="number" id="smashFactor" value="1.45" step="0.01" oninput="runPhysics()"></div>
         </div>
 
@@ -83,15 +69,15 @@
 
     <button id="lockBtn" onclick="toggleAdmin()">🔒</button>
     
-    <div class="admin-section" id="adminArea">
-        <label>Trackman CSV Import</label>
-        <input type="file" id="fileInput" style="margin: 10px 0; color: #fff;">
-        <div class="table-window" id="tableWindow">
+    <div id="adminArea">
+        <h3 style="font-size: 14px; color: var(--primary); margin: 0;">TRACKMAN CSV VAULT</h3>
+        <input type="file" id="fileInput" style="margin: 15px 0; color: #fff;">
+        <div class="table-window">
             <table id="dataTable"></table>
         </div>
     </div>
 
-    <footer class="sticky-footer"> &copy; JMM &bull; 2026 </footer>
+    <footer class="sticky-footer"> &copy; JMM & bull; 2026 </footer>
 
 <script>
     const presets = {
@@ -100,9 +86,9 @@
         wedge: { launch: 30.0, smash: 1.22, attack: -5.0 }
     };
 
-    function setPreset(type, btn) {
+    function setPreset(type) {
         document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        document.getElementById('btn-' + type).classList.add('active');
         document.getElementById('launchAngle').value = presets[type].launch;
         document.getElementById('smashFactor').value = presets[type].smash;
         document.getElementById('attackAngle').value = presets[type].attack;
@@ -111,9 +97,7 @@
 
     function toggleAdmin() {
         if (prompt("Enter Admin PIN:") === "1234") {
-            const area = document.getElementById('adminArea');
-            area.classList.toggle('admin-visible');
-            document.getElementById('lockBtn').textContent = area.classList.contains('admin-visible') ? "🔓" : "🔒";
+            document.getElementById('adminArea').classList.toggle('admin-visible');
         }
     }
 
@@ -139,7 +123,6 @@
             points.push({x: x, y: y});
             if (y <= 0) break;
         }
-
         document.getElementById('resDist').textContent = Math.round(x) + " yds";
         document.getElementById('resHeight').textContent = Math.round(maxH * 3) + " ft";
         drawPlot(points, x, maxH);
@@ -159,7 +142,7 @@
         ctx.strokeStyle = "#333"; ctx.lineWidth = 1; ctx.beginPath();
         ctx.moveTo(pad, h-pad); ctx.lineTo(w-pad, h-pad); ctx.stroke();
 
-        ctx.strokeStyle = "#00d4ff"; ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.beginPath();
+        ctx.strokeStyle = "#00d4ff"; ctx.lineWidth = 4; ctx.beginPath();
         ctx.moveTo(pad, h - pad);
         pts.forEach(p => ctx.lineTo(pad + (p.x * scaleX), (h - pad) - (p.y * scaleY)));
         ctx.stroke();
@@ -177,8 +160,6 @@
             let html = "<thead><tr>" + rows[0].map(h => `<th>${h.trim()}</th>`).join('') + "</tr></thead><tbody>";
             rows.slice(1).forEach(row => html += "<tr>" + row.map(v => `<td>${v.trim()}</td>`).join('') + "</tr>");
             document.getElementById('dataTable').innerHTML = html + "</tbody>";
-            // Auto-scroll to data once loaded
-            document.getElementById('tableWindow').scrollIntoView({ behavior: 'smooth' });
         };
         reader.readAsText(file);
     });
