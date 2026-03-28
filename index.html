@@ -104,11 +104,29 @@ let clubKey = null;
 
 // PWA Service Worker
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('Service Worker Registered'))
-            .catch(err => console.log('Service Worker Failed', err));
-    });
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      
+      // Check if an update is already waiting
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            showUpdateBar();
+          }
+        });
+      });
+      
+    }).catch(err => console.log('Service Worker Failed', err));
+  });
+}
+
+function showUpdateBar() {
+  const updateBar = document.createElement('div');
+  updateBar.style = "position:fixed; bottom:70px; left:0; width:100%; background:#ff9500; color:#000; text-align:center; padding:15px; font-weight:bold; z-index:10000; cursor:pointer;";
+  updateBar.innerHTML = "New Update Available! Tap to Refresh";
+  updateBar.onclick = () => { window.location.reload(); };
+  document.body.appendChild(updateBar);
 }
 
 // FILE UPLOAD
