@@ -2,7 +2,7 @@ const cacheName = 'golf-sim-v2'; // Incremented version
 const assets = [
   'index.html',
   'manifest.json',
-  'icon-png.png' // Added your icon to the cache list
+  'icon-jmm-1024.png' // Added your icon to the cache list
 ];
 
 self.addEventListener('install', e => {
