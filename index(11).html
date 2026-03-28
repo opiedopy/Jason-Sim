@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JMM - GolfSim App</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon--jmm-1024.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#111111">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
+            padding: 20px; 
+            padding-bottom: 100px; /* Crucial: Prevents footer from covering last row of data */
+            background-color: #111111;
+            color: white;
+            font-size: 18px;
+        }
+        
+        h1 { color: #00d4ff; font-size: 28px; margin-bottom: 10px; }
+        h3 { font-size: 20px; color: #aaa; margin-top: 25px; }
+
+        input[type="file"], select { 
+            background: #222;
+            color: #eee;
+            border: 1px solid #444;
+            padding: 15px; 
+            width: 100%; 
+            font-size: 18px;
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-top: 10px;
+        }
+
+        table { 
+            border-collapse: collapse; 
+            width: 100%; 
+            margin-top: 25px; 
+            font-size: 14px; 
+        }
+        
+        td, th { border: 1px solid #333; padding: 12px 8px; text-align: center; }
+        th { background: #222; color: #00d4ff; }
+        tr:nth-child(even) { background: #181818; }
+
+        #debug { 
+            margin-top: 20px; 
+            color: #0f0; 
+            font-size: 13px; 
+            white-space: pre-wrap; 
+            background: #000; 
+            padding: 10px; 
+            border-radius: 5px;
+            border: 1px solid #222;
+        }
+
+        /* HIGH VISIBILITY STICKY FOOTER */
+        .sticky-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #00d4ff; /* Your theme blue */
+            color: #000;         /* Contrast black text */
+            text-align: center;
+            padding: 15px 0;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-top: 2px solid #fff;
+            z-index: 9999;       /* Ensures it floats above everything */
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🏌️ JMM - GolfSim App</h1>
+
+    <h3>Upload ForeSight Falcon CSV data file</h3>
+    <input type="file" id="fileInput">
+
+    <select id="clubFilter">
+        <option value="all">All Clubs</option>
+    </select>
+
+    <div id="debug">System Ready.</div>
+
+    <div style="overflow-x: auto;"> 
+        <table id="dataTable"></table>
+    </div>
+
+    <footer class="sticky-footer">
+         &copy; JMM &bull; 2026
+    </footer>
+
+<script>
+let allData = [];
+let clubKey = null;
+
+// PWA Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      
+      // Check if an update is already waiting
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            showUpdateBar();
+          }
+        });
+      });
+      
+    }).catch(err => console.log('Service Worker Failed', err));
+  });
+}
+
+function showUpdateBar() {
+  const updateBar = document.createElement('div');
+  updateBar.style = "position:fixed; bottom:70px; left:0; width:100%; background:#ff9500; color:#000; text-align:center; padding:15px; font-weight:bold; z-index:10000; cursor:pointer;";
+  updateBar.innerHTML = "New Update Available! Tap to Refresh";
+  updateBar.onclick = () => { window.location.reload(); };
+  document.body.appendChild(updateBar);
+}
+
+// FILE UPLOAD
+document.getElementById('fileInput').addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(event){
+        parseCSV(event.target.result);
+    };
+    reader.readAsText(file);
+});
+
+// PARSE CSV
+function parseCSV(text){
+    const rows = text.split('\n')
+        .filter(r => r.trim() !== '')
+        .map(r => r.split(','));
+
+    if (rows.length === 0) return;
+
+    const headers = rows[0].map(h => h.trim());
+    document.getElementById('debug').textContent = "Detected Headers:\n" + headers.join(', ');
+
+    clubKey = headers.find(h => h.toLowerCase().includes("club"));
+
+    allData = rows.slice(1).map(row => {
+        let obj = {};
+        headers.forEach((h,i)=> obj[h] = row[i]);
+        return obj;
+    });
+
+    populateClubFilter();
+    renderTable(allData);
+}
+
+// POPULATE FILTER
+function populateClubFilter(){
+    const select = document.getElementById('clubFilter');
+    select.innerHTML = '<option value="all">All Clubs</option>';
+    if(!clubKey) return;
+
+    const clubs = [...new Set(allData.map(d => d[clubKey]))].filter(Boolean);
+    clubs.forEach(c => {
+        let opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        select.appendChild(opt);
+    });
+}
+
+// FILTER CHANGE
+document.getElementById('clubFilter').addEventListener('change', function(){
+    const val = this.value;
+    renderTable(val === "all" || !clubKey ? allData : allData.filter(d => d[clubKey] === val));
+});
+
+// RENDER TABLE
+function renderTable(data){
+    const table = document.getElementById('dataTable');
+    if(data.length === 0){
+        table.innerHTML = "<tr><td>No data available</td></tr>";
+        return;
+    }
+
+    let html = "<thead><tr>";
+    Object.keys(data[0]).forEach(h => html += `<th>${h}</th>`);
+    html += "</tr></thead><tbody>";
+
+    data.forEach(row=>{
+        html += "<tr>";
+        Object.values(row).forEach(v => html += `<td>${v || ''}</td>`);
+        html += "</tr>";
+    });
+    html += "</tbody>";
+    table.innerHTML = html;
+}
+</script>
+
+</body>
+</html>
