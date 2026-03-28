@@ -1,8 +1,8 @@
-const cacheName = 'golf-sim-v2'; // Change this to v3, v4, etc. to force an update
+const cacheName = 'golf-sim-v3'; // Change this to v3, v4, etc. to force an update
 const assets = [
   'index.html',
   'manifest.json',
-  'icon-png.png'
+  'icon-jmm-1024.png'
 ];
 
 // 1. INSTALL: Save the files into the "Vault" (Cache)
