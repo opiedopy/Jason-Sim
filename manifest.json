@@ -1,18 +1,24 @@
 {
   "short_name": "GolfSim Pro",
   "name": "JMM - GolfSim Pro Analyzer",
-  "icons": [
-    {
-      "src": "icon-jmm-1024.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-jmm-1024.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ],
+ "icons": [
+  {
+    "src": "icon-jmm-1024.png",
+    "sizes": "192x192",
+    "type": "image/png"
+  },
+  {
+    "src": "icon-jmm-1024.png",
+    "sizes": "512x512",
+    "type": "image/png"
+  },
+  {
+    "src": "icon-jmm-1024.png",
+    "sizes": "1024x1024",
+    "type": "image/png",
+    "purpose": "any"
+  }
+],
   "start_url": "index.html",
   "display": "standalone",
   "theme_color": "#111111",
